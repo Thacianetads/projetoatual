@@ -15,21 +15,21 @@ Um sistema web simples desenvolvido em PHP e CSS para a gestão e cadastro de it
 
 # ✨ Funcionalidades Principais
 
-Cadastro de Novos Itens: Formulário para inserção de novos itens.
+1. Cadastro de Novos Itens: Formulário para inserção de novos itens.
 
-Visualização de Itens: Listagem de todos os itens cadastrados.
+2. Visualização de Itens: Listagem de todos os itens cadastrados.
 
-Edição e Exclusão: Opções para atualizar ou remover itens existentes.
+3. Edição e Exclusão: Opções para atualizar ou remover itens existentes.
 
 # ⚙️ Pré-requisitos
 
-Antes de começar, você precisará ter um ambiente de desenvolvimento web configurado. Recomendamos a utilização de pacotes como XAMPP.
+- Antes de começar, você precisará ter um ambiente de desenvolvimento web configurado. Recomendamos a utilização de pacotes como XAMPP.
 
-Servidor Web: Apache.
+- Servidor Web: Apache.
 
-Linguagem de Programação: PHP.
+- Linguagem de Programação: PHP.
 
-MySQL e Supabase.
+- MySQL e Supabase.
 
 
 # 🚀 Instalação e Configuração
