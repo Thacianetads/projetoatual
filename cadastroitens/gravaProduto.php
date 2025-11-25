@@ -45,8 +45,41 @@ $updated_at = date('Y-m-d H:i:s');
 $imagem = $_FILES["cImagem"] ?? null;
 $acao = 'cadastrar'; 
 
-
 if (!$name || !$preco_para_bd) die("❌ Nome ou preço do produto não informado.");
+
+function redirecionaComErro($mensagemErro) {
+    // ATENÇÃO: Substitua 'SEU_NOME_DO_FORMULARIO.php' pelo nome real do seu arquivo HTML/PHP
+    // Exemplo: header("Location: cadastro_produto.php?error=" . urlencode($mensagemErro));
+    header("Location: produto.php?error=" . urlencode($mensagemErro));
+    exit();
+}
+
+include "conecta.php";
+
+
+// A. Verificar se o SKU já existe (deve ser único)
+if (!empty($ecoflow_sku)) { // Só verifica se o SKU foi preenchido
+    $stmt_sku = $conexao->prepare("SELECT id FROM TBPRODUTO WHERE ecoflow_sku = ? LIMIT 1");
+    $stmt_sku->bind_param("s", $ecoflow_sku);
+    $stmt_sku->execute();
+    $stmt_sku->store_result();
+    
+    if ($stmt_sku->num_rows > 0) {
+        redirecionaComErro("O SKU '{$ecoflow_sku}' já está cadastrado. Por favor, use um SKU diferente.");
+    }
+    $stmt_sku->close();
+}
+
+// B. Verificar se o Nome já existe (deve ser único)
+$stmt_nome = $conexao->prepare("SELECT id FROM TBPRODUTO WHERE name = ? LIMIT 1");
+$stmt_nome->bind_param("s", $name);
+$stmt_nome->execute();
+$stmt_nome->store_result();
+
+if ($stmt_nome->num_rows > 0) {
+    redirecionaComErro("O Nome de produto '{$name}' já está cadastrado. Por favor, use um nome diferente.");
+}
+$stmt_nome->close();
 
 $imagem_url = null;
 
@@ -91,8 +124,6 @@ if ($imagem && $imagem['error'] === UPLOAD_ERR_OK) {
     $imagem_url = "$supabase_url/storage/v1/object/public/$bucket/$nome_arquivo";
     echo "✅ Imagem enviada com sucesso! <br>";
 }
-
-include "conecta.php";
 
 
 // --- SALVA NO MYSQL ---

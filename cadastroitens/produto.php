@@ -101,6 +101,18 @@ input:focus {
   box-shadow: 0 0 4px rgba(0, 120, 255, 0.4);
   outline: none;
 }
+
+.error-message {
+    background-color: #ffebeb;
+    color: #cc0000;
+    border: 1px solid #cc0000;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
 </style>
 </head>
 <body>
@@ -108,6 +120,14 @@ input:focus {
 <div class="container">
     <h1>Cadastrar itens</h1>
     <hr>
+    <?php
+    // ESTE É O NOVO BLOCO PHP QUE DEVE SER INCLUÍDO
+    // Ele verifica se a variável 'error' existe na URL e exibe a mensagem.
+    if (isset($_GET['error'])) {
+        $erro = htmlspecialchars($_GET['error']);
+        echo '<div class="error-message">' . $erro . '</div>';
+    }
+    ?>
     <form action="gravaProduto.php" id="produtoForm" enctype="multipart/form-data" method="post">
         <label>NCM: </label>
         <input type="text" id="ncm" name="cNcm" required>
@@ -240,11 +260,5 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
-
-
-
-
-
-
 </body>
 </html>

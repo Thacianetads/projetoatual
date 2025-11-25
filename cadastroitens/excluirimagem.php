@@ -60,7 +60,7 @@ if (isset($txtConteudo["id"])) {
             $stmt->close();
 
             echo "✅ Imagem excluída com sucesso!";
-            echo "<meta http-equiv='Refresh' CONTENT='0;URL=consultaProduto.php'>";
+            echo "<meta http-equiv='Refresh' CONTENT='0;URL=alteraProduto.php?id=$varId'>";
         } else {
             echo "❌ Produto não possui imagem!";
         }
