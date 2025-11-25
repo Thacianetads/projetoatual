@@ -7,11 +7,11 @@ Um sistema web simples desenvolvido em PHP e CSS para a gestão e cadastro de it
 
 - PHP (Linguagem principal para o backend e lógica de negócios)
 
-CSS (Para a estilização e design da interface)
+- CSS (Para a estilização e design da interface)
 
-HTML (Estrutura das páginas)
+- HTML (Estrutura das páginas)
 
-MySQL e Supabase.
+- MySQL e Supabase.
 
 # ✨ Funcionalidades Principais
 
