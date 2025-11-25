@@ -1,10 +1,27 @@
+
 <?php
 include "conecta.php";
 
-$sql = "SELECT * FROM TBPRODUTO";
-$rs = mysqli_query($conexao,$sql);
+// Verifica se há busca
+$busca = "";
+if (isset($_GET['busca']) && !empty($_GET['busca'])) {
+    $busca = mysqli_real_escape_string($conexao, $_GET['busca']);
+    $sql = "SELECT * FROM TBPRODUTO 
+            WHERE name LIKE '%$busca%' 
+               OR ncm LIKE '%$busca%'
+               OR preco LIKE '%$busca%'  
+               OR ecoflow_sku LIKE '%$busca%' 
+               OR fabricante LIKE '%$busca%' 
+               OR fornecedor LIKE '%$busca%' 
+               OR tags LIKE '%$busca%'";
+} else {
+    $sql = "SELECT * FROM TBPRODUTO";
+}
+
+$rs = mysqli_query($conexao, $sql);
 $total_registros = mysqli_num_rows($rs);
 ?>
+
 <html>
 <head>
 <meta charset="UTF-8">
@@ -172,6 +189,74 @@ $total_registros = mysqli_num_rows($rs);
         color: white;
         text-decoration: none;
     }
+
+    .search-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .search-container input[type="text"] {
+        width: 300px;
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+
+    .search-container button {
+        background-color: #2980b9;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 0.9rem;
+        margin-left: 5px;
+    }
+
+    .search-container button:hover {
+        background-color: #1f618d;
+    }
+    
+    .container-preview {
+        position: relative;
+        display: inline-block;
+    }
+
+    .img-hover-zoom {
+        display: none;
+        position: absolute;
+        
+        /* --- POSICIONAMENTO (Para esquerda da tabela) --- */
+        top: -100px;     /* Ajuste vertical */
+        right: 100%;     /* Joga para a esquerda da miniatura */
+        margin-right: 15px; /* Afasta um pouco da tabela */
+        
+        z-index: 99999;
+        
+        /* --- APARÊNCIA --- */
+        border: 4px solid #fff;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        background-color: #fff;
+        
+        /* --- FORÇAR TAMANHO GRANDE --- */
+        width: 170px;       /* Força a largura fixa de 500px */
+        height: auto;       /* Mantém a proporção (não achata a imagem) */
+        min-width: 170px;   /* Garante que nunca fique menor que isso */
+        
+        /* Opcional: Se a imagem for muito pequena e ficar pixelada, 
+           você pode remover o object-fit ou usar 'contain' */
+        object-fit: contain; 
+        border-radius: 6px;
+    }
+
+    .container-preview:hover .img-hover-zoom {
+        display: block;
+    }
+    
+
 </style>
 
 <title> Consulta Produto </title>
@@ -179,7 +264,7 @@ $total_registros = mysqli_num_rows($rs);
     function confirmacao(id,name){
         var resposta = confirm("Deseja remover "+name+"?");
         if (resposta == true){
-            window.location.href ="excluirimagem.php?+id="+id;
+            window.location.href ="excluirProduto.php?+id="+id;
         }
     }
     </script>
@@ -187,22 +272,30 @@ $total_registros = mysqli_num_rows($rs);
 <body>
 <h1> Lista de produtos </h1>
 <hr>
+<div class="search-container">
+    <form method="GET" action="">
+        <input type="text" name="busca" placeholder="Buscar produto, SKU, fabricante..." value="<?php echo htmlspecialchars($busca); ?>">
+        <button type="submit">Pesquisar</button>
+        <?php if (!empty($busca)) { ?>
+            <button type="button" onclick="window.location.href='?';" style="background-color:#95a5a6;">Limpar</button>
+        <?php } ?>
+    </form>
+</div>
+<button><a href="produto.php">Cadastrar item</a></button>
+<br>
 <br>
 <table cellspacing = "0" border = "1">
 <thead>
     <tr>
         <th>ncm</th>
-        <th>ecoflow_sku</th>
-        <th>name</th>
-        <th>cost_cents</th>
-        <th>price_cents</th>
-        <th>price_on_time_cents</th>
-        <th>created_at</th>
-        <th>updated_at</th>
+        <th>sku</th>
+        <th>nome do produto</th>
+        <th>preço</th>
+        <th>Fabricante</th>
+        <th>Fornecedor</th>
+        <th>Tags</th>
         <th>imagem</th>
-        <th>Anexar imagem</th>
-        <th>Atualizar item</th>
-        <th>Excluir imagem</th>
+        <th>Ação</th>
     </tr>
 </thead>
 <?php
@@ -211,11 +304,12 @@ $total_registros = mysqli_num_rows($rs);
         $ncm = $reg["ncm"];
         $ecoflow_sku = $reg["ecoflow_sku"];
         $name = $reg["name"];
-        $cost_cents = $reg["cost_cents"];
-        $price_cents = $reg["price_cents"];
-        $price_on_time_cents = $reg["price_on_time_cents"];
-        $created_at = $reg["created_at"];
-        $updated_at = $reg["updated_at"];
+        $preco_em_centavos = $reg["preco"];
+        $preco_em_reais_numero = (float)$preco_em_centavos / 100;
+        $preco_em_reais_formatado = "R$ " . number_format($preco_em_reais_numero, 2, ',', '.');
+        $fabricante = $reg["fabricante"];
+        $fornecedor = $reg["fornecedor"];
+        $tags = $reg["tags"];
         $imagem = $reg["imagem"];
 
 ?>
@@ -223,31 +317,38 @@ $total_registros = mysqli_num_rows($rs);
         <td><?php print $ncm; ?></td>
         <td><?php print $ecoflow_sku; ?></td>
         <td><?php print $name; ?></td>
-        <td><?php print $cost_cents; ?></td>
-        <td><?php print $price_cents; ?></td>
-        <td><?php print $price_on_time_cents; ?></td>
-        <td><?php print $created_at; ?></td>
-        <td><?php print $updated_at; ?></td>
+        <td><?php print $preco_em_reais_formatado; ?></td>
+        <td><?php print $fabricante; ?></td>
+        <td><?php print $fornecedor; ?></td>
+        <td><?php print $tags; ?></td>
         <td>
-        <?php if(!empty($imagem)){ ?>
-        <a href="<?php echo htmlspecialchars(trim($imagem)); ?>" 
-       target="_blank" 
-       rel="noopener noreferrer" 
-       style="color:#2980b9; font-weight:600; text-decoration:none;">
-       Ver imagem
-    </a>
-<?php } else { ?>
-    <span style="color:#888;">Sem imagem</span>
-<?php } ?>
-        </td>
-        <td>
-            <button><a href="alteraimagem.php?id=<?php print $id;?>">Anexar imagem</a></button>
-        </td>
+    <?php if(!empty($imagem)){ ?>
+        
+        <div class="container-preview">
+            
+            <a href="<?php echo htmlspecialchars(trim($imagem)); ?>" 
+               target="_blank" 
+               rel="noopener noreferrer"
+               title="Clique para abrir original">
+               
+               <img src="<?php echo htmlspecialchars(trim($imagem)); ?>" 
+                    alt="Miniatura" 
+                    style="width: 65px; height: 65px; border-radius: 4px; object-fit: cover; cursor: zoom-in; margin-left: 20px;">
+               
+               <img src="<?php echo htmlspecialchars(trim($imagem)); ?>" 
+                    class="img-hover-zoom"
+                    alt="Preview ampliado">
+            </a>
+
+        </div>
+
+    <?php } else { ?>
+        <span style="color:#888;">Sem imagem</span>
+    <?php } ?>
+</td>
          <td>
-            <button><a href="alteraProduto.php?id=<?php print $id;?>">Atualizar item</a></button><br>
-        </td>
-        <td>
-            <a href="javascript:func()" onclick="confirmacao('<?php print $id; ?>','<?php print $imagem;?>')"><img src="excluir.png" alt="Exclui Pessoa" border ="0" widht="20px" height="20px"></a>
+            <a href="alteraProduto.php?id=<?php print $id;?>"><img src="editar.png" alt="Altera Pessoa" border="0" widht="20px" height="20px" style="width:27px;height:27px"></a>
+            <a href="javascript:func()" onclick="confirmacao('<?php print $id; ?>','<?php print $name;?>')"><img src="excluir.png" alt="Exclui Pessoa" border ="0" widht="20px" height="20px" style="width:27px;height:27px"></a>
         </td>
 
     </tr>
@@ -256,6 +357,5 @@ $total_registros = mysqli_num_rows($rs);
 </table>
 
 <br>
-<button><a href="produto.php">Cadastrar</a></button>
 </body>
 </html>

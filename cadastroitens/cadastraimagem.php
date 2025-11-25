@@ -19,15 +19,7 @@ if (isset($txtConteudo["id"])) {
 
 <html>
 <head>
-<title> Alterar imagem </title>
-<script language ="Javascript">
-    function confirmacao(id,name){
-        var resposta = confirm("Deseja remover "+name+"?");
-        if (resposta == true){
-            window.location.href ="excluirimagem.php?+id="+id;
-        }
-    }
-  </script>
+<title> Alterar dados do produto </title>
 <head>
 <body>
 <meta charset="UTF-8">
@@ -138,16 +130,14 @@ input:focus {
 }
 </style>
 <div class="container">
-<h1>ALTERAR IMAGEM </H1> <HR><BR>
-<input type="text" value="<?php print $imagem;?>"><br><br> <a href="javascript:func()" onclick="confirmacao('<?php print $id; ?>','<?php print $imagem;?>')"><img src="excluir.png" alt="Exclui Pessoa" border ="0" widht="20px" height="20px"></a>
-<form action="gravaimagem.php" method="post" enctype="multipart/form-data"> 
+<h1>CADASTRAR IMAGEM </H1> <HR><BR>
+<form action="adicionaimagem.php" method="post" enctype="multipart/form-data"> 
 <input type="hidden" name="cId" value="<?php echo $id;?>"/>
 <div class="div1">
 <div class="div2">
 <br>
-<br>
-<label>Atualizar imagem:</label><br>
-<input type="file" name="cImagem" accept="image/*" value="<?php echo $imagem;?>"><br>
+<label>Cadastrar imagem:</label><br>
+<input type="file" name="cImagem" accept="image/*" enctype="multipart/form-data"><br>
 <input type="submit" value="Enviar" name="b1" class="btn"><br>
 </div>
 <br>

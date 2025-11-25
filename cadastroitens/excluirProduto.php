@@ -1,10 +1,11 @@
-<?php
+<?php 
 
 require __DIR__ . '/vendor/autoload.php';
 
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
+// 1. Recebe e valida o ID
 $txtConteudo = filter_input_array(INPUT_GET, FILTER_DEFAULT);
 
 if (isset($txtConteudo["id"])) {
@@ -13,7 +14,7 @@ if (isset($txtConteudo["id"])) {
     if ($varId) {
         include "conecta.php";
 
-        // Pega o nome da imagem do banco
+        // 2. Busca o nome da imagem antes de deletar o produto
         $sql = "SELECT imagem FROM TBPRODUTO WHERE id = ?";
         $stmt = $conexao->prepare($sql);
         $stmt->bind_param("i", $varId);
@@ -22,17 +23,15 @@ if (isset($txtConteudo["id"])) {
         $stmt->fetch();
         $stmt->close();
 
+        // 3. Se houver imagem, exclui do Supabase
         if ($imagem_url) {
-            // Extrai o nome do arquivo da URL
             $path_parts = parse_url($imagem_url, PHP_URL_PATH);
             $arquivo = basename($path_parts);
 
-            // Configuração Supabase
             $supabase_url = $_ENV['SUPABASE_URL'];
             $supabase_key = $_ENV['SUPABASE_KEY'];
             $bucket = 'imagens';
 
-            // Exclusão via cURL
             $curl = curl_init();
             curl_setopt_array($curl, [
                 CURLOPT_URL => "$supabase_url/storage/v1/object/$bucket/$arquivo",
@@ -48,24 +47,28 @@ if (isset($txtConteudo["id"])) {
             $error = curl_error($curl);
             curl_close($curl);
 
+            // Opcional: Verificar erro, mas não impedir a exclusão do registro
             if ($http_code != 200 && $http_code != 204) {
-                die("❌ Erro ao excluir imagem (HTTP $http_code): $error <br>Resposta: $response");
+                // Log de erro se necessário, mas segue o fluxo
+                error_log("Erro ao excluir imagem do Supabase: $error");
             }
-
-            // Atualiza banco
-            $sqlUpdate = "UPDATE TBPRODUTO SET imagem = NULL WHERE id = ?";
-            $stmt = $conexao->prepare($sqlUpdate);
-            $stmt->bind_param("i", $varId);
-            $stmt->execute();
-            $stmt->close();
-
-            echo "✅ Imagem excluída com sucesso!";
-            echo "<meta http-equiv='Refresh' CONTENT='0;URL=consultaProduto.php'>";
-        } else {
-            echo "❌ Produto não possui imagem!";
         }
 
+        // 4. AGORA SIM: Exclui o registro do banco de dados (DELETE em vez de UPDATE)
+        $sqlDelete = "DELETE FROM TBPRODUTO WHERE id = ?";
+        $stmt = $conexao->prepare($sqlDelete);
+        $stmt->bind_param("i", $varId);
+        
+        if ($stmt->execute()) {
+            echo "✅ Item e imagem excluídos com sucesso!";
+            echo "<meta http-equiv='Refresh' CONTENT='0;URL=consultaProduto.php'>";
+        } else {
+            echo "❌ Erro ao excluir o produto do banco de dados.";
+        }
+        
+        $stmt->close();
         mysqli_close($conexao);
+        
     } else {
         echo "ID inválido!";
     }
